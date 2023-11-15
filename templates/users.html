@@ -1,0 +1,667 @@
+<!-- templates/users.html -->
+{% extends 'layout.html' %} {% block content %}
+<style>
+  .users-container {
+    height: 100%;
+    min-height: 20%;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
+    padding: 10px 25px;
+    display: flex;
+    flex-direction: column;
+  }
+  .checkbox-container {
+    display: flex;
+    align-items: top;
+  }
+
+  .checkbox-container label {
+    margin-right: -160px;
+  }
+
+  h3 {
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100px;
+  }
+
+  button:hover,
+  svg:hover {
+    cursor: pointer;
+  }
+
+  .section-buttons {
+    width: 100%;
+    display: flex;
+    padding-left: 0px;
+    justify-content: space-between;
+  }
+
+  #users-table-container {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  #users-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  #users-table th,
+  #users-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left; /* Center the content in all cells */
+  }
+
+  #users-table th,
+  #users-table td:first-child {
+    text-align: center; /* Adjust as needed, or keep it centered */
+  }
+
+  th:hover {
+    cursor: pointer;
+  }
+
+  h5 {
+    font-weight: 300;
+    color: gray;
+    font-size: 12px;
+  }
+
+  #add-user-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    justify-content: center;
+    align-items: center;
+  }
+
+  #view-user-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    justify-content: center;
+    align-items: center;
+  }
+
+  #view-user-form {
+    background-color: white;
+    padding: 20px 50px 20px 50px;
+    border-radius: 5px;
+    width: 400px;
+  }
+
+  #add-user-form {
+    background-color: white;
+    padding: 20px 50px 20px 50px;
+    border-radius: 5px;
+    width: 400px;
+  }
+</style>
+
+<div class="users-container">
+  <div class="section-heading">
+    <h3>Users List</h3>
+    <div class="section-buttons">
+      <button onclick="fetchUsers()">Refresh</button>
+      <svg
+        onclick="openAddUserModal()"
+        xmlns="http://www.w3.org/2000/svg"
+        height="24px"
+        viewBox="0 0 24 24"
+        width="24px"
+        fill="#000000"
+      >
+        <path d="M0 0h24v24H0z" fill="none" />
+        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+      </svg>
+    </div>
+  </div>
+  <div id="users-table-container">
+    <table id="users-table">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)" data-index="0" data-sort-order="asc">
+            User ID
+          </th>
+          <th onclick="sortTable(1)" data-index="1" data-sort-order="asc">
+            First Name
+          </th>
+          <th onclick="sortTable(2)" data-index="2" data-sort-order="asc">
+            Last Name
+          </th>
+          <th onclick="sortTable(3)" data-index="3" data-sort-order="asc">
+            Email
+          </th>
+          <th onclick="sortTable(4)" data-index="4" data-sort-order="asc">
+            Role
+          </th>
+          <th onclick="sortTable(5)" data-index="5" data-sort-order="asc">
+            Last Login
+          </th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body">
+        <!-- User data will be populated here -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="add-user-modal">
+  <div id="add-user-form">
+    <!-- Your add user form goes here -->
+    <h1>Add a new user</h1>
+    <div
+      id="error-message"
+      style="
+        color: red;
+        margin-top: -15px;
+        margin-bottom: 10px;
+        font-size: 12px;
+      "
+    ></div>
+    <form>
+      <label for="email">Email</label>
+      <input
+        type="text"
+        name="email"
+        placeholder="Email"
+        class="form-control"
+      />
+
+      <label for="first_name">First Name</label>
+      <input
+        type="text"
+        name="first_name"
+        placeholder="First Name"
+        class="form-control"
+      />
+
+      <label for="last_name">Last Name</label>
+      <input
+        type="text"
+        name="last_name"
+        placeholder="Last Name"
+        class="form-control"
+      />
+
+      <label for="password">Password</label>
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        class="form-control"
+      />
+
+      <label for="confirm_password">Confirm Password</label>
+      <input
+        type="password"
+        name="confirm_password"
+        placeholder="Confirm password"
+        class="form-control"
+      />
+      <div class="checkbox-container">
+        <label for="is_admin">Administrator?</label>
+        <input type="checkbox" name="is_admin" />
+      </div>
+
+      <button type="button" onclick="addUser()">Add User</button>
+      <button
+        type="button"
+        class="secondary-button"
+        onclick="closeAddUserModal()"
+      >
+        Cancel
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- View User Modal -->
+<div id="view-user-modal">
+  <div id="view-user-form">
+    <!-- Your view user form goes here -->
+    <div
+      style="
+        width: 100%;
+        display: flex;
+        padding-left: 0px;
+        justify-content: space-between;
+        align-items: center;
+      "
+    >
+      <h4 id="view-user-modal-title" style="font-size: 28px"></h4>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        height="20px"
+        viewBox="0 0 24 24"
+        width="20px"
+        fill="#000000"
+        style="vertical-align: middle"
+        id="delete-user-button"
+      >
+        <path d="M0 0h24v24H0z" fill="none" />
+        <path
+          d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+        />
+      </svg>
+    </div>
+
+    <h5
+      id="user-last-login"
+      style="margin-bottom: 40px; margin-top: -35px"
+    ></h5>
+    <div
+      id="error-message"
+      style="
+        color: red;
+        margin-top: -15px;
+        margin-bottom: 10px;
+        font-size: 12px;
+      "
+    ></div>
+    <form>
+      <label for="first_name">First Name</label>
+      <input
+        type="text"
+        name="first_name"
+        placeholder="First Name"
+        class="form-control"
+      />
+
+      <label for="last_name">Last Name</label>
+      <input
+        type="text"
+        name="last_name"
+        placeholder="Last Name"
+        class="form-control"
+      />
+
+      <label for="email">Email</label>
+      <input
+        type="text"
+        name="email"
+        placeholder="Email"
+        class="form-control"
+      />
+
+      <div class="checkbox-container">
+        <label for="is_admin">Administrator?</label>
+        <input type="checkbox" name="is_admin" />
+      </div>
+
+      <button type="button" id="update-user-button">Update User</button>
+      <button
+        type="button"
+        class="secondary-button"
+        onclick="closeViewUserModal()"
+      >
+        Cancel
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openAddUserModal() {
+    document.getElementById("add-user-modal").style.display = "flex";
+  }
+
+  function closeAddUserModal() {
+    // Clear form fields
+    const form = document.querySelector("#add-user-form form");
+    clearUserForm(form);
+    document.getElementById("add-user-modal").style.display = "none";
+  }
+
+  function openUserDetailsModal(userId) {
+    // You can fetch user details based on the userId
+    // For now, let's assume you have a function fetchUserDetails
+    const viewUserModal = document.getElementById("view-user-modal");
+    const viewUserForm = document.getElementById("view-user-form");
+    const modalHeading = document.getElementById("view-user-modal-title");
+    const lastLogin = document.getElementById("user-last-login");
+    const form = document.querySelector("#view-user-form form");
+
+    clearUserForm(form);
+
+    // Populate the modal with user details
+    fetchUserDetails(userId).then((userDetails) => {
+      // Populate the modal with user details
+      viewUserForm.querySelector('input[name="first_name"]').value =
+        userDetails.first_name;
+      viewUserForm.querySelector('input[name="last_name"]').value =
+        userDetails.last_name;
+      viewUserForm.querySelector('input[name="email"]').value =
+        userDetails.email;
+      const isAdminCheckbox = viewUserForm.querySelector(
+        'input[name="is_admin"]'
+      );
+
+      // Set the checkbox status based on is_admin value
+      isAdminCheckbox.checked = userDetails.is_admin;
+
+      modalHeading.textContent = `${userDetails.first_name} ${userDetails.last_name}`;
+      // Convert the last_login string to a Date object
+      const lastLoginDate = new Date(userDetails.last_login);
+
+      // Format the date as a string in the desired format
+      const formattedLastLogin = lastLoginDate.toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        timeZoneName: "short",
+      });
+
+      // Display the formatted date
+      lastLogin.textContent = "Last Login: " + formattedLastLogin;
+    });
+
+    // Display the modal
+    viewUserModal.style.display = "flex";
+    // Add event listener to the "Update User" button
+    const updateUserButton = document.getElementById("update-user-button");
+    const deleteUserButton = document.getElementById("delete-user-button");
+
+    updateUserButton.addEventListener("click", () => updateUser(userId));
+    deleteUserButton.addEventListener("click", () => deleteUser(userId));
+  }
+
+  function clearUserForm(form) {
+    // Reset the form fields
+    form.reset();
+    // Clear header title
+    document.getElementById("view-user-modal-title").textContent = "";
+    // Clear the error message
+    document.getElementById("error-message").textContent = "";
+  }
+
+  function closeViewUserModal() {
+    // Clear form fields when closing the modal
+    const form = document.querySelector("#view-user-form form");
+    clearUserForm(form);
+
+    // Close the modal
+    document.getElementById("view-user-modal").style.display = "none";
+  }
+
+  function showUpdateConfirmation() {
+    return confirm("Are you sure you want to update this user?");
+  }
+
+  function showDeleteConfirmation() {
+    return confirm("Are you sure you want to delete this user?");
+  }
+
+  function sortTable(columnIndex) {
+    const table = document.getElementById("users-table");
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    // Get the current sorting order from the TH element
+    const th = table.querySelector(`th[data-index="${columnIndex}"]`);
+    let currentSortOrder = th.getAttribute("data-sort-order") || "asc";
+
+    // Toggle between ascending and descending order
+    currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
+    th.setAttribute("data-sort-order", currentSortOrder);
+
+    // Remove sorted and desc classes from all th elements
+    table.querySelectorAll("th").forEach((header) => {
+      header.classList.remove("sorted", "desc");
+    });
+
+    // Add sorted class to the current th element
+    th.classList.add("sorted");
+
+    // Add desc class if the current order is descending
+    if (currentSortOrder === "desc") {
+      th.classList.add("desc");
+    }
+
+    // Sort the rows based on the content of the selected column and sorting order
+    rows.sort((a, b) => {
+      const aValue = a.cells[columnIndex].textContent.trim();
+      const bValue = b.cells[columnIndex].textContent.trim();
+
+      // Handle date columns
+      if (columnIndex === 5) {
+        let dateA = new Date(aValue);
+        let dateB = new Date(bValue);
+
+        // Check if the date is valid
+        if (isNaN(dateA.getTime())) {
+          dateA = null;
+        }
+
+        if (isNaN(dateB.getTime())) {
+          dateB = null;
+        }
+
+        // Handle null or invalid dates
+        if (!dateA && !dateB) {
+          return 0;
+        } else if (!dateA) {
+          return 1;
+        } else if (!dateB) {
+          return -1;
+        }
+
+        // Compare the dates
+        return currentSortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      } else {
+        // Handle non-date columns (numeric or string)
+        return (
+          aValue.localeCompare(bValue, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          }) * (currentSortOrder === "asc" ? 1 : -1)
+        );
+      }
+    });
+
+    // Remove existing rows from the table
+    tbody.innerHTML = "";
+
+    // Append the sorted rows to the table
+    rows.forEach((row) => tbody.appendChild(row));
+  }
+
+  function fetchUserDetails(userId) {
+    return fetch(`/api/users/${userId}`)
+      .then((response) => response.json())
+      .then((data) => data.user)
+      .catch((error) => console.error("Error fetching user details:", error));
+  }
+
+  function fetchUsers() {
+    fetch("/api/users")
+      .then((response) => response.json())
+      .then((data) => {
+        // Clear existing table rows
+        document.getElementById("users-table-body").innerHTML = "";
+
+        // Populate the table with fetched user data
+        data.users.forEach((user) => {
+          let row = document.createElement("tr");
+
+          // Add a click event listener to each row
+          row.addEventListener("click", () => openUserDetailsModal(user.id));
+
+          // Add a hover effect to highlight the row
+          row.addEventListener("mouseover", () => {
+            row.style.backgroundColor = "#f0f0f0"; // Replace with your desired highlight color
+          });
+
+          row.addEventListener("mouseout", () => {
+            row.style.backgroundColor = ""; // Reset the background color
+          });
+
+          row.style.cursor = "pointer"; // Change cursor style to pointer
+
+          row.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.first_name}</td>
+          <td>${user.last_name}</td>
+          <td>${user.email}</td>
+          <td>${user.is_admin ? "Admin" : "Viewer"}</td>
+          <td>${user.last_login}</td>
+        `;
+          document.getElementById("users-table-body").appendChild(row);
+        });
+      })
+      .catch((error) => console.error("Error fetching users:", error));
+  }
+
+  function addUser() {
+    const email = document.querySelector('input[name="email"]').value;
+    const first_name = document.querySelector('input[name="first_name"]').value;
+    const last_name = document.querySelector('input[name="last_name"]').value;
+    const password = document.querySelector('input[name="password"]').value;
+    const confirm_password = document.querySelector(
+      'input[name="confirm_password"]'
+    ).value;
+    const is_admin = document.querySelector('input[name="is_admin"]').checked;
+
+    // Validate required fields
+    if (!email || !first_name || !last_name || !password || !confirm_password) {
+      document.getElementById("error-message").textContent =
+        "Please fill out all fields.";
+      return;
+    }
+
+    // Validate password match
+    if (password !== confirm_password) {
+      document.getElementById("error-message").textContent =
+        "Passwords do not match.";
+      return;
+    }
+
+    const userData = {
+      email,
+      first_name,
+      last_name,
+      password,
+      confirm_password,
+      is_admin,
+    };
+
+    // Now you can use userData in your fetch request
+    fetch("/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response
+            .clone()
+            .json()
+            .then((error) => {
+              throw new Error(error.error);
+            });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Success:", data);
+        closeAddUserModal();
+        fetchUsers();
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        document.getElementById("error-message").textContent = error;
+      });
+  }
+
+  function updateUser(userId) {
+    const viewUserForm = document.getElementById("view-user-form");
+    // Show the confirmation dialog
+    if (showUpdateConfirmation()) {
+      // Get the updated data from the form
+      const updatedData = {
+        first_name: viewUserForm.querySelector('input[name="first_name"]')
+          .value,
+        last_name: viewUserForm.querySelector('input[name="last_name"]').value,
+        email: viewUserForm.querySelector('input[name="email"]').value,
+      };
+
+      // Make a fetch request to update the user details
+      fetch(`/api/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response
+              .clone()
+              .json()
+              .then((error) => {
+                throw new Error(error.error);
+              });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Success:", data);
+          // Optionally, update the UI or perform additional actions
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          // Handle errors or show an error message
+        });
+    }
+  }
+
+  function deleteUser(userId) {
+    if (showDeleteConfirmation()) {
+      // Make a fetch request to delete the user
+      fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response
+              .clone()
+              .json()
+              .then((error) => {
+                throw new Error(error.error);
+              });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Success:", data);
+          // Optionally, update the UI or perform additional actions
+          location.reload();
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          // Handle errors or show an error message
+        });
+    }
+  }
+  // Fetch users on page load
+  document.addEventListener("DOMContentLoaded", fetchUsers);
+</script>
+
+{% endblock %}

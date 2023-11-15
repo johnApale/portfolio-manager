@@ -1,0 +1,222 @@
+<!-- templates/about.html -->
+{% extends 'layout.html' %} {% block content %}
+<style>
+  .profile-container {
+    height: 100%;
+    min-height: 20%;
+  }
+  .profile-body {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+  button:hover {
+    cursor: pointer;
+  }
+
+  .section-container {
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.1);
+    padding: 10px 25px;
+    margin-bottom: 20px;
+  }
+
+  #add-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    justify-content: center;
+    align-items: center;
+  }
+  #add-form {
+    background-color: white;
+    padding: 20px 50px 20px 50px;
+    border-radius: 5px;
+    width: 400px;
+  }
+
+  #modal-content {
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    margin-bottom: 5px;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    box-shadow: none;
+    resize: none;
+  }
+  #char-counter {
+    color: #555;
+    font-size: 10px;
+    margin-bottom: 20px;
+  }
+</style>
+
+<div class="profile-container">
+  <div class="profile-body">
+    <div class="section-container">
+      <div class="section-heading">
+        <h3>Contact Info</h3>
+        <button>add</button>
+      </div>
+      <div class="section-body"></div>
+    </div>
+    <div class="section-container">
+      <div class="section-heading">
+        <h3>Headline</h3>
+        <button onclick="openAddModal('headline')">add</button>
+      </div>
+      <div id="headline-section">
+        <p>Test</p>
+      </div>
+    </div>
+    <div class="section-container">
+      <div class="section-heading">
+        <h3>Bio</h3>
+        <button onclick="openAddModal('bio')">add</button>
+      </div>
+      <div class="section-body"></div>
+    </div>
+    <div class="section-container">
+      <div class="section-heading">
+        <h3>Education</h3>
+        <button>add</button>
+      </div>
+      <div class="section-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Content Modal -->
+<!-- HTML -->
+<div id="add-modal">
+  <div id="add-form">
+    <h1 id="modal-header"></h1>
+    <div
+      id="error-message"
+      style="
+        color: red;
+        margin-top: -15px;
+        margin-bottom: 10px;
+        font-size: 12px;
+      "
+    ></div>
+    <form>
+      <textarea
+        id="modal-content"
+        name="content"
+        class="form-control"
+        oninput="updateCharCount(this)"
+      ></textarea>
+      <div id="char-counter">0/255</div>
+      <button id="add-section-button" type="button" onclick="addSection()">
+        Add
+      </button>
+      <button type="button" class="secondary-button" onclick="closeAddModal()">
+        Cancel
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Load headlines when the page loads
+    loadProfiles("headline");
+  });
+  function openAddModal(section) {
+    var modalHeader = document.getElementById("modal-header");
+    var modalContent = document.getElementById("modal-content");
+    var charCounter = document.getElementById("char-counter");
+
+    modalHeader.innerText = "Add a new " + section;
+    modalContent.placeholder = "Enter " + section + " content...";
+    charCounter.innerText = "Character count: 0/255";
+
+    document.getElementById("add-modal").style.display = "flex";
+
+    const addSectionButton = document.getElementById("add-section-button");
+    addSectionButton.addEventListener("click", () => addSection(section));
+  }
+
+  function closeAddModal() {
+    var modalContent = document.getElementById("modal-content");
+    modalContent.value = "";
+    document.getElementById("add-modal").style.display = "none";
+  }
+
+  function updateCharCount(textarea) {
+    var charCounter = document.getElementById("char-counter");
+    charCounter.innerText =
+      "Character count: " + textarea.value.length + "/255";
+  }
+
+  function addSection(section) {
+    const content = document.getElementById("modal-content").value;
+    const errorMessage = document.getElementById("error-message");
+
+    if (!content) {
+      errorMessage.textContent = "Error: Can't add empty " + section;
+      return;
+    }
+
+    const sectionData = {
+      section: section,
+      content: content,
+    };
+
+    fetch("/api/add_profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(sectionData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((error) => {
+            throw new Error(error.error);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Success:", data);
+        closeAddModal();
+        // You may want to perform additional actions after successfully adding a section
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        errorMessage.textContent = error;
+      });
+  }
+
+  function loadProfiles(section) {
+    // Fetch profiles for the specified section
+    fetch(`/api/profiles/${section}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log(`Profiles for ${section}:`, data);
+
+        // Display profiles in the HTML
+        const headlineTable = document.getElementById(`${section}-table`);
+        headlineTable.innerHTML = ""; // Clear existing content
+
+        console.log(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching profiles:", error);
+      });
+  }
+</script>
+
+{% endblock %}

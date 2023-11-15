@@ -1,0 +1,31 @@
+<!-- templates/layout.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title }}</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;1,100;1,300;1,400;1,500;1,700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    {% include 'navbar.html' %}
+    <div class="main-screen">
+      <div class="top-screen">
+        <h1>{{ title }}</h1>
+        <div class="user-info">
+          <h2>John Apale</h2>
+          <p>JA</p>
+        </div>
+      </div>
+      {% block content %} {% endblock %}
+    </div>
+  </body>
+</html>

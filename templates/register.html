@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="registration-container">
+
+
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            
+            <label for="email">Email</label>
+            <input type="text" name="email" placeholder="Email" class="form-control">
+            
+            <label for="first_name">First Name</label>
+            <input type="text" name="first_name" placeholder="First Name" class="form-control">
+            
+            <label for="last_name">Last Name</label>
+            <input type="text" name="last_name" placeholder="Last Name" class="form-control">
+            
+            <label for="password">Password</label>
+            <input type="password" name="password" placeholder="Password" class="form-control">
+            
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" name="confirm_password" placeholder="Confirm password" class="form-control">
+            
+            <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+    </div>
+{% endblock %}
