@@ -42,7 +42,8 @@ class Profile(db.Model):
     section = db.Column(db.String(50), nullable=False)
     content = db.Column(db.String(255), nullable=False)
     is_selected = db.Column(db.Boolean, default=False)
-    
+    created_date = db.Column(db.DateTime, default=datetime.utcnow)
+
     __table_args__ = (
         CheckConstraint("section IN ('headline', 'bio')"),
     )
@@ -219,7 +220,7 @@ def add_profile():
     new_profile = Profile(
         section=data['section'],
         content=data['content'],
-        is_selected=data['is_selected']
+        is_selected=data['is_selected'],
     )
 
 
@@ -239,7 +240,7 @@ def get_profiles_by_section(section):
     profiles = Profile.query.filter_by(section=section).all()
 
     # You can customize the response format as needed
-    profiles_data = [{'id': profile.id, 'content': profile.content} for profile in profiles]
+    profiles_data = [{'id': profile.id, 'content': profile.content, 'created_date': profile.created_date} for profile in profiles]
 
     return jsonify({'section': section, 'profiles': profiles_data})
 
