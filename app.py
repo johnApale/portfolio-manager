@@ -240,10 +240,54 @@ def get_profiles_by_section(section):
     profiles = Profile.query.filter_by(section=section).all()
 
     # You can customize the response format as needed
-    profiles_data = [{'id': profile.id, 'content': profile.content, 'created_date': profile.created_date} for profile in profiles]
+    profiles_data = [{'id': profile.id, 'content': profile.content, 'created_date': profile.created_date, 'is_selected': profile.is_selected} for profile in profiles]
 
     return jsonify({'section': section, 'profiles': profiles_data})
 
+# Update Profile Endpoint (PUT request)
+@app.route('/api/profiles/<int:profile_id>', methods=['PUT'])
+def update_profile(profile_id):
+    profile = Profile.query.get(profile_id)
+
+    if profile:
+        data = request.json
+
+        # Unselect all other selected content by section
+        if(data['is_selected']):
+            Profile.query.filter_by(section=data['section'], is_selected=True).update({'is_selected': False})
+
+        profile.content = data.get('content', profile.content)
+        profile.is_selected = data.get('is_selected', profile.is_selected)
+
+
+        db.session.commit()
+
+        return jsonify({'message': 'Profile updated successfully', 'profile': {
+            'id': profile.id,
+            'section': profile.section,
+            'content': profile.content,
+            'is_selected': profile.is_selected
+        }})
+    else:
+        return jsonify({'error': 'Profile ID not found'}), 404
+
+# Delete Profile Endpoint (DELETE request)
+@app.route('/api/profiles/<int:profile_id>', methods=['DELETE'])
+def delete_profile(profile_id):
+    profile = Profile.query.get(profile_id)
+
+    if profile:
+        db.session.delete(profile)
+        db.session.commit()
+
+        return jsonify({'message': 'Profile deleted successfully', 'deleted_profile': {
+            'id': profile.id,
+            'section': profile.section,
+            'content': profile.content,
+            'is_selected': profile.is_selected
+        }})
+    else:
+        return jsonify({'error': 'Profile not found'}), 404
 
 
 if __name__ == '__main__':
